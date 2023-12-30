@@ -10,15 +10,18 @@ import DatePicker from 'react-datepicker';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormMessage, } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 
 import { eventFormSchema } from '@/lib/validator';
+import { useUploadThing } from '@/lib/uploadthing';
 import { eventDefaultValues } from '@/constants';
 import Dropdown from './Dropdown';
 import { FileUploader } from './FileUploader';
 
 import "react-datepicker/dist/react-datepicker.css";
+import { useRouter } from 'next/navigation';
+import { createEvent } from '@/lib/actions/event.actions';
 
 type EventFormProps = {
   userId: string
@@ -31,6 +34,10 @@ const EventForm = ({ userId, type }: EventFormProps) => {
 
   const inittalValues = eventDefaultValues;
 
+  const { startUpload } = useUploadThing('imageUploader')
+
+  const router = useRouter();
+
   // 1. Define the form
   const form = useForm<z.infer<typeof eventFormSchema>>({
     resolver: zodResolver(eventFormSchema),
@@ -38,9 +45,36 @@ const EventForm = ({ userId, type }: EventFormProps) => {
   })
 
   // 2. Define a submit handler.
-  function onSubmit(values: z.infer<typeof eventFormSchema>) {
-
+  async function onSubmit(values: z.infer<typeof eventFormSchema>) {
     console.log(values)
+
+    let uploadedImageUrl = values.imageUrl;
+
+    if (files.length > 0) {
+      const uploadedImages = await startUpload(files);
+
+      if (!uploadedImages) {
+        return;
+      }
+      uploadedImageUrl = uploadedImages[0].url;
+    }
+
+    if (type === 'Create') {
+      try {
+        const newEvent = await createEvent({
+          event: { ...values, imageUrl: uploadedImageUrl },
+          userId,
+          path: '/profile'
+        });
+
+        if (newEvent) {
+          form.reset();
+          router.push(`events/${newEvent._id}`);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
   }
 
   return (
@@ -89,7 +123,7 @@ const EventForm = ({ userId, type }: EventFormProps) => {
           />
           <FormField
             control={form.control}
-            name="url"
+            name="imageUrl"
             render={({ field }) => (
               <FormItem className='w-full'>
                 <FormControl className='h-72'>
@@ -224,7 +258,12 @@ const EventForm = ({ userId, type }: EventFormProps) => {
                               >
                                 Free Ticket
                               </label>
-                              <Checkbox id='isFree' className='mr-2 h-5 w-5 border-2 border-primary-500' />
+                              <Checkbox
+                                id='isFree'
+                                className='mr-2 h-5 w-5 border-2 border-primary-500'
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
                             </div>
                           </FormControl>
                           <FormMessage />
