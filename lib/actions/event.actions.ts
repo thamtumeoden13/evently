@@ -1,4 +1,4 @@
-"use Server"
+"use server"
 
 import { CreateEventParams } from "@/types"
 import { handleError } from "../utils"
@@ -6,13 +6,13 @@ import { connectToDatabase } from "../database"
 import User from "@/lib/database/models/user.model"
 import Event from "@/lib/database/models/event.model"
 
-export const createEvent = async ({ event, userId, path }: CreateEventParams) => {
+export const createEvent = async ({ userId, event, path }: CreateEventParams) => {
 
   try {
     await connectToDatabase();
 
     const organizer = await User.findById(userId);
-
+    console.log('organizer', organizer)
     if (!organizer) {
       throw new Error("Organizer not found!");
     }
