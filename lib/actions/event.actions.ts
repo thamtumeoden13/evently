@@ -5,6 +5,13 @@ import { handleError } from "../utils"
 import { connectToDatabase } from "../database"
 import User from "@/lib/database/models/user.model"
 import Event from "@/lib/database/models/event.model"
+import Category from "@/lib/database/models/category.model"
+
+const populateEvent = async (query: any) => {
+  return query
+    .populate({ path: 'organizer', model: User, select: '_id firstName lastName' })
+    .populate({ path: 'category', model: Category, select: '_id name' })
+}
 
 export const createEvent = async ({ userId, event, path }: CreateEventParams) => {
 
@@ -17,14 +24,31 @@ export const createEvent = async ({ userId, event, path }: CreateEventParams) =>
       throw new Error("Organizer not found!");
     }
 
-    const newEvent = Event.create({
+    const newEvent = await Event.create({
       ...event,
       category: event.categoryId,
       organizer: userId
     });
-
     return JSON.parse(JSON.stringify(newEvent));
   } catch (error) {
+    handleError(error)
+  }
+}
+
+export const getEventById = async (eventId: string) => {
+
+  try {
+    await connectToDatabase();
+
+    const event = await populateEvent(Event.findById(eventId));
+    console.log('event', event)
+    if (!event) {
+      throw new Error("Event not found!");
+    }
+
+    return JSON.parse(JSON.stringify(event));
+  } catch (error) {
+    console.log(error)
     handleError(error)
   }
 }
