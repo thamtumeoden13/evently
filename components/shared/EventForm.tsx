@@ -38,6 +38,7 @@ const EventForm = ({ type, userId, eventId, event }: EventFormProps) => {
   const inittalValues = event && type === 'Update'
     ? {
       ...event,
+      categoryId: event.category._id,
       startDateTime: new Date(event.startDateTime),
       endDateTime: new Date(event.endDateTime),
     }

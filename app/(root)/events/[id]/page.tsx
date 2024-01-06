@@ -3,6 +3,7 @@ import { getEventById, getRelatedEventsByCategory } from '@/lib/actions/event.ac
 import Image from 'next/image';
 import { formatDateTime } from '@/lib/utils';
 import Collection from '@/components/shared/Collection';
+import CheckoutButton from '@/components/shared/CheckoutButton';
 
 const EventDetails = async ({ params: { id }, searchParams }: SearchParamProps) => {
   console.log('id', id)
@@ -47,7 +48,9 @@ const EventDetails = async ({ params: { id }, searchParams }: SearchParamProps) 
               </div>
             </div>
 
-            {/* CHECKOUT BUTTON */}
+            <CheckoutButton event={event} />
+
+
             <div className='flex flex-col gap-5'>
               <div className='flex gap-2 md:gap-3'>
                 <Image
@@ -96,12 +99,12 @@ const EventDetails = async ({ params: { id }, searchParams }: SearchParamProps) 
         <h2 className='h2-bold'>Related Event</h2>
         <Collection
           data={relatedEvents?.data}
-          emptyTitle='No Event Found'
+          emptyTitle='No Events Found'
           emptyStateSubText='Come back later'
           collectionType='All_Events'
           limit={6}
-          page={1}
-          totalPages={2}
+          page={Number(searchParams.page)}
+          totalPages={relatedEvents?.totalPages}
         />
       </section>
     </>
